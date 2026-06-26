@@ -46,6 +46,35 @@ h2 {
   margin-bottom: 16px;
 }
 
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  margin-bottom: 16px;
+}
+
+.tabs button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tabs button.active {
+  background: var(--highlight-bg);
+  color: var(--accent);
+}
+
 .hint {
   font-size: 13px;
   color: var(--text);
