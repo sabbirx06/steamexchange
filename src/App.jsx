@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { supabase } from './supabase'
 import './App.css'
 
@@ -33,6 +34,7 @@ function Result({ label, value, highlight }) {
 
 export default function App() {
   const [tab, setTab] = useState('family')
+  const [chartRange, setChartRange] = useState('months')
 
   // Deal Calculator
   const [usd, setUsd] = useState('')
@@ -362,6 +364,40 @@ export default function App() {
     )
   }
 
+  const getChartData = () => {
+    const dataMap = {}
+    
+    const getKey = (dateStr) => {
+      const d = new Date(dateStr)
+      if (chartRange === 'years') return d.getFullYear().toString()
+      if (chartRange === 'months') {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        return `${monthNames[d.getMonth()]} ${d.getFullYear()}`
+      }
+      if (chartRange === 'weeks') {
+        const firstDayOfYear = new Date(d.getFullYear(), 0, 1)
+        const pastDaysOfYear = (d - firstDayOfYear) / 86400000
+        const weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
+        return `${d.getFullYear()} W${weekNum}`
+      }
+      return dateStr.split('T')[0]
+    }
+
+    transactions.filter(t => t.type === 'trade').forEach(t => {
+      if (!t.created_at) return
+      const key = getKey(t.created_at)
+      if (!dataMap[key]) {
+        dataMap[key] = { name: key, raw: new Date(t.created_at).getTime(), tk: 0, uah: 0 }
+      } else {
+        dataMap[key].raw = Math.min(dataMap[key].raw, new Date(t.created_at).getTime())
+      }
+      dataMap[key].tk += Number(t.tk || 0)
+      dataMap[key].uah += Number(t.uah || 0)
+    })
+
+    return Object.values(dataMap).sort((a, b) => a.raw - b.raw)
+  }
+
   return (
     <>
       <header className="topbar">
@@ -377,6 +413,7 @@ export default function App() {
             <button className={tab === 'family' ? 'active' : ''} onClick={() => setTab('family')}>Family & Trades</button>
             <button className={tab === 'deal' ? 'active' : ''} onClick={() => setTab('deal')}>Wallet Transfer</button>
             <button className={tab === 'cost' ? 'active' : ''} onClick={() => setTab('cost')}>Game Gifting Calculator</button>
+            <button className={tab === 'analytics' ? 'active' : ''} onClick={() => setTab('analytics')}>Analytics</button>
           </div>
 
           {tab === 'family' && (
@@ -677,6 +714,30 @@ export default function App() {
                 <Result label="BDT per UAH" value={rateC ? (n(rateC) * bkF).toFixed(4) : null} highlight />
               </div>
             </section>
+          )}
+          {tab === 'analytics' && (
+            <div className="card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h2>Transaction Analytics</h2>
+                <div className="tabs" style={{ marginBottom: 0 }}>
+                  <button className={chartRange === 'weeks' ? 'active' : ''} onClick={() => setChartRange('weeks')}>Weeks</button>
+                  <button className={chartRange === 'months' ? 'active' : ''} onClick={() => setChartRange('months')}>Months</button>
+                  <button className={chartRange === 'years' ? 'active' : ''} onClick={() => setChartRange('years')}>Years</button>
+                </div>
+              </div>
+              <div style={{ height: '400px', width: '100%', background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '4px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={getChartData()} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#323f4c" />
+                    <XAxis dataKey="name" stroke="#8f98a0" tick={{fill: '#8f98a0', fontSize: 12}} />
+                    <YAxis stroke="#8f98a0" tick={{fill: '#8f98a0', fontSize: 12}} />
+                    <Tooltip contentStyle={{ backgroundColor: '#171a21', border: '1px solid #323f4c', borderRadius: '4px' }} itemStyle={{ color: '#c7d5e0' }} />
+                    <Line type="monotone" dataKey="tk" name="Amount Spent (BDT)" stroke="#a4d007" strokeWidth={2} dot={{ r: 4, fill: '#a4d007', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="uah" name="UAH Got (₴)" stroke="#66c0f4" strokeWidth={2} dot={{ r: 4, fill: '#66c0f4', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           )}
 
         </div>
