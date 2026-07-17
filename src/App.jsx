@@ -35,6 +35,9 @@ function Result({ label, value, highlight }) {
 export default function App() {
   const [tab, setTab] = useState('family')
   const [chartRange, setChartRange] = useState('months')
+  const [showTk, setShowTk] = useState(true)
+  const [showUah, setShowUah] = useState(true)
+  const [showSpentUah, setShowSpentUah] = useState(true)
 
   // Deal Calculator
   const [usd, setUsd] = useState('')
@@ -752,6 +755,22 @@ export default function App() {
                   <button className={chartRange === 'years' ? 'active' : ''} onClick={() => setChartRange('years')}>Years</button>
                 </div>
               </div>
+              
+              <div style={{ display: 'flex', gap: '24px', marginBottom: '16px', padding: '0 4px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={showTk} onChange={e => setShowTk(e.target.checked)} />
+                  <span style={{ color: '#a4d007', fontSize: '13px' }}>Amount Spent (BDT)</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={showUah} onChange={e => setShowUah(e.target.checked)} />
+                  <span style={{ color: '#66c0f4', fontSize: '13px' }}>UAH Got (₴)</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={showSpentUah} onChange={e => setShowSpentUah(e.target.checked)} />
+                  <span style={{ color: '#ff5e5e', fontSize: '13px' }}>UAH Spent (₴)</span>
+                </label>
+              </div>
+
               <div style={{ height: '400px', width: '100%', background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '4px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={getChartData()} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -759,9 +778,9 @@ export default function App() {
                     <XAxis dataKey="name" stroke="#8f98a0" tick={{fill: '#8f98a0', fontSize: 12}} />
                     <YAxis stroke="#8f98a0" tick={{fill: '#8f98a0', fontSize: 12}} />
                     <Tooltip contentStyle={{ backgroundColor: '#171a21', border: '1px solid #323f4c', borderRadius: '4px' }} itemStyle={{ color: '#c7d5e0' }} />
-                    <Line type="monotone" dataKey="tk" name="Amount Spent (BDT)" stroke="#a4d007" strokeWidth={2} dot={{ r: 4, fill: '#a4d007', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="uah" name="UAH Got (₴)" stroke="#66c0f4" strokeWidth={2} dot={{ r: 4, fill: '#66c0f4', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="spentUah" name="UAH Spent (₴)" stroke="#ff5e5e" strokeWidth={2} dot={{ r: 4, fill: '#ff5e5e', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                    {showTk && <Line type="monotone" dataKey="tk" name="Amount Spent (BDT)" stroke="#a4d007" strokeWidth={2} dot={{ r: 4, fill: '#a4d007', strokeWidth: 0 }} activeDot={{ r: 6 }} />}
+                    {showUah && <Line type="monotone" dataKey="uah" name="UAH Got (₴)" stroke="#66c0f4" strokeWidth={2} dot={{ r: 4, fill: '#66c0f4', strokeWidth: 0 }} activeDot={{ r: 6 }} />}
+                    {showSpentUah && <Line type="monotone" dataKey="spentUah" name="UAH Spent (₴)" stroke="#ff5e5e" strokeWidth={2} dot={{ r: 4, fill: '#ff5e5e', strokeWidth: 0 }} activeDot={{ r: 6 }} />}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
