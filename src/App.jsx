@@ -468,7 +468,7 @@ export default function App() {
                               </div>
                             )}
                             {(tx.type === 'gift' || tx.type === 'market') && tx.details && (
-                              <div style={{ display: 'inline-block', background: 'rgba(0,0,0,0.3)', color: '#66c0f4', padding: '4px 8px', fontSize: '13px', borderRadius: '4px', border: '1px solid rgba(102,192,244,0.2)' }}>
+                              <div style={{ display: 'inline-block', background: 'rgba(0,0,0,0.3)', color: '#66c0f4', padding: '4px 8px', fontSize: '13px', border: '1px solid rgba(102,192,244,0.2)' }}>
                                 {tx.details}
                               </div>
                             )}
