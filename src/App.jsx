@@ -169,10 +169,15 @@ export default function App() {
   // Derived Accounts for Family
   const familyAccounts = transactions.reduce((acc, t) => {
     if (!acc[t.person]) acc[t.person] = { uah: 0 }
+    if (t.details && !acc[t.details] && t.type === 'transfer') acc[t.details] = { uah: 0 }
+    
     if (t.type === 'trade') {
       acc[t.person].uah += t.uah
-    } else if (t.type === 'gift') {
+    } else if (t.type === 'gift' || t.type === 'market') {
       acc[t.person].uah -= t.uah
+    } else if (t.type === 'transfer') {
+      acc[t.person].uah -= t.uah
+      if (t.details) acc[t.details].uah += t.uah
     }
     return acc
   }, {})
@@ -221,15 +226,17 @@ export default function App() {
   const [tradeUah, setTradeUah] = useState('')
   const [tradeTk, setTradeTk] = useState('')
 
+  const [editingTx, setEditingTx] = useState(null)
+
   const handleSaveTrade = async (e) => {
     e.preventDefault()
-    if (!tradePerson || !tradeUah || !tradeTk) return
-    const rate = (n(tradeTk) / n(tradeUah)).toFixed(2)
+    if (!tradePerson || !tradeUah) return
+    const rate = tradeTk ? (n(tradeTk) / n(tradeUah)).toFixed(2) : null
     const tx = {
       type: 'trade',
       person: tradePerson,
       uah: n(tradeUah),
-      tk: n(tradeTk),
+      tk: tradeTk ? n(tradeTk) : null,
       rate: rate
     }
     if (tradeDate) {
@@ -239,35 +246,79 @@ export default function App() {
       setMembers([...members, tradePerson])
       supabase.from('members').insert({ name: tradePerson }).then()
     }
-    const { data: newTx } = await supabase.from('transactions').insert(tx).select().single()
-    if (newTx) setTransactions(prev => prev.find(t => t.id === newTx.id) ? prev : [newTx, ...prev])
+    if (editingTx) {
+      const { data: newTx } = await supabase.from('transactions').update(tx).eq('id', editingTx).select().single()
+      if (newTx) setTransactions(prev => prev.map(t => t.id === editingTx ? newTx : t))
+    } else {
+      const { data: newTx } = await supabase.from('transactions').insert(tx).select().single()
+      if (newTx) setTransactions(prev => prev.find(t => t.id === newTx.id) ? prev : [newTx, ...prev])
+    }
+    
     setShowTradeModal(false)
+    setEditingTx(null)
     setTradePerson('')
     setTradeDate('')
     setTradeUah('')
     setTradeTk('')
   }
 
+  const openEditModal = (tx) => {
+    setEditingTx(tx.id)
+    if (tx.type === 'trade') {
+      setTradePerson(tx.person)
+      setTradeDate(tx.created_at ? tx.created_at.split('T')[0] : '')
+      setTradeUah(tx.uah || '')
+      setTradeTk(tx.tk || '')
+      setShowTradeModal(true)
+    } else {
+      setGiftType(tx.type)
+      setGiftPerson(tx.person)
+      setGiftDate(tx.created_at ? tx.created_at.split('T')[0] : '')
+      setGiftDetails(tx.details || '')
+      setGiftUah(tx.uah || '')
+      setShowGiftModal(true)
+    }
+  }
+
   const [showGiftModal, setShowGiftModal] = useState(false)
+  const [giftType, setGiftType] = useState('gift')
   const [giftPerson, setGiftPerson] = useState('')
+  const [giftDate, setGiftDate] = useState('')
+  const [giftDetails, setGiftDetails] = useState('')
   const [giftUah, setGiftUah] = useState('')
 
   const handleSaveGift = async (e) => {
     e.preventDefault()
     if (!giftPerson || !giftUah) return
+    if (giftType === 'transfer' && !giftDetails) return // require receiver for transfer
+    
     const tx = {
-      type: 'gift',
+      type: giftType,
       person: giftPerson,
-      uah: n(giftUah)
+      uah: n(giftUah),
+      details: giftDetails || null
+    }
+    if (giftDate) {
+      tx.created_at = new Date(giftDate).toISOString()
     }
     if (!members.includes(giftPerson)) {
       setMembers([...members, giftPerson])
       supabase.from('members').insert({ name: giftPerson }).then()
     }
-    const { data: newTx } = await supabase.from('transactions').insert(tx).select().single()
-    if (newTx) setTransactions(prev => prev.find(t => t.id === newTx.id) ? prev : [newTx, ...prev])
+    if (editingTx) {
+      const { data: newTx } = await supabase.from('transactions').update(tx).eq('id', editingTx).select().single()
+      if (newTx) setTransactions(prev => prev.map(t => t.id === editingTx ? newTx : t))
+    } else {
+      const { data: newTx } = await supabase.from('transactions').insert(tx).select().single()
+      if (newTx) setTransactions(prev => prev.find(t => t.id === newTx.id) ? prev : [newTx, ...prev])
+    }
+    
     setShowGiftModal(false)
+    setEditingTx(null)
+    setGiftType('gift')
     setGiftPerson('')
+    setGiftDate('')
+    setGiftDetails('')
     setGiftUah('')
   }
 
@@ -342,8 +393,8 @@ export default function App() {
                     <button type="submit" className="btn-secondary">+</button>
                   </form>
                   <div className="market-header-actions" style={{ margin: 0, padding: 0, background: 'transparent' }}>
-                    <button className="btn-market-green" onClick={() => setShowTradeModal(true)}>Log a trade</button>
-                    <button className="btn-market-grey" onClick={() => setShowGiftModal(true)}>Log a gift</button>
+                    <button className="btn-market-green" onClick={() => { setEditingTx(null); setShowTradeModal(true); }}>Log a trade</button>
+                    <button className="btn-market-grey" onClick={() => { setEditingTx(null); setShowGiftModal(true); }}>Log an Outgoing</button>
                   </div>
                 </div>
                 <div className="family-header-right">
@@ -392,10 +443,10 @@ export default function App() {
                     </thead>
                     <tbody>
                       {transactions.filter(tx => {
-                        if (txFilter === 'incoming') return tx.type === 'trade'
-                        if (txFilter === 'outgoing') return tx.type === 'gift'
+                        if (txFilter === 'incoming') return tx.type === 'trade' || tx.type === 'transfer'
+                        if (txFilter === 'outgoing') return tx.type === 'gift' || tx.type === 'market' || tx.type === 'transfer'
                         return true
-                      }).map(tx => (
+                      }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).map(tx => (
                         <tr key={tx.id}>
                           <td style={{ color: '#8f98a0', whiteSpace: 'nowrap' }}>
                             {new Date(tx.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
@@ -403,6 +454,10 @@ export default function App() {
                           <td style={{ textTransform: 'capitalize' }}>
                             {tx.type === 'trade' 
                               ? `${tx.person} bought ${tx.uah} ₴`
+                              : tx.type === 'market'
+                              ? `${tx.person} bought market item for ${tx.uah} ₴`
+                              : tx.type === 'transfer'
+                              ? `${tx.person} transferred ${tx.uah} ₴ to ${tx.details}`
                               : `gifted ${tx.person} game for ${tx.uah} ₴`}
                           </td>
                           <td>
@@ -412,16 +467,22 @@ export default function App() {
                                 <div className="discount-price">{tx.uah}₴</div>
                               </div>
                             )}
+                            {(tx.type === 'gift' || tx.type === 'market') && tx.details && (
+                              <div style={{ color: '#8f98a0', fontSize: '13px' }}>{tx.details}</div>
+                            )}
                           </td>
                           <td>
                             {tx.type === 'trade' && tx.tk && (
                               <div className="tx-paid">{tx.tk} tk</div>
                             )}
                           </td>
-                          <td style={{textAlign: 'right'}}>
+                          <td style={{textAlign: 'right', whiteSpace: 'nowrap'}}>
+                            <button className="tx-delete" onClick={() => openEditModal(tx)} style={{ marginRight: '12px' }}>✎</button>
                             <button className="tx-delete" onClick={() => {
-                              setTransactions(transactions.filter(t => t.id !== tx.id))
-                              supabase.from('transactions').delete().eq('id', tx.id).then()
+                              if(window.confirm('Delete this transaction?')) {
+                                setTransactions(transactions.filter(t => t.id !== tx.id))
+                                supabase.from('transactions').delete().eq('id', tx.id).then()
+                              }
                             }}>x</button>
                           </td>
                         </tr>
@@ -474,8 +535,8 @@ export default function App() {
                       <Field label="UAH Bought" value={tradeUah} onChange={setTradeUah} />
                       <Field label="BDT Paid" value={tradeTk} onChange={setTradeTk} />
                       <div className="modal-actions">
-                        <button type="button" className="btn-secondary" onClick={() => setShowTradeModal(false)}>Cancel</button>
-                        <button type="submit" className="btn-primary">Save Trade</button>
+                        <button type="button" className="btn-secondary" onClick={() => { setShowTradeModal(false); setEditingTx(null); }}>Cancel</button>
+                        <button type="submit" className="btn-primary">{editingTx ? 'Update Trade' : 'Save Trade'}</button>
                       </div>
                     </form>
                   </div>
@@ -485,13 +546,48 @@ export default function App() {
               {showGiftModal && (
                 <div className="modal-overlay" onClick={() => setShowGiftModal(false)}>
                   <div className="modal" onClick={e => e.stopPropagation()}>
-                    <h3>Gift Game</h3>
+                    <h3>Log an Outgoing</h3>
                     <form onSubmit={handleSaveGift}>
-                      <Field type="text" label="Gifted To (Person)" value={giftPerson} onChange={setGiftPerson} list="member-list" />
-                      <Field label="Game Price (UAH)" value={giftUah} onChange={setGiftUah} />
+                      <div className="field">
+                        <label>Transaction Type</label>
+                        <select value={giftType} onChange={e => setGiftType(e.target.value)}>
+                          <option value="gift">Game Gift</option>
+                          <option value="market">Market Item</option>
+                          <option value="transfer">Internal Transfer</option>
+                        </select>
+                      </div>
+                      <Field type="date" label="Date" value={giftDate} onChange={setGiftDate} />
+                      <Field 
+                        type="text" 
+                        label={giftType === 'transfer' ? "From (Sender)" : giftType === 'market' ? "Bought By (Person)" : "Gifted To (Person)"} 
+                        value={giftPerson} 
+                        onChange={setGiftPerson} 
+                        list="member-list" 
+                      />
+                      {giftType === 'transfer' ? (
+                        <Field 
+                          type="text" 
+                          label="To (Receiver)" 
+                          value={giftDetails} 
+                          onChange={setGiftDetails} 
+                          list="member-list" 
+                        />
+                      ) : (
+                        <Field 
+                          type="text" 
+                          label={giftType === 'market' ? "Item Name (Optional)" : "Game Name (Optional)"} 
+                          value={giftDetails} 
+                          onChange={setGiftDetails} 
+                        />
+                      )}
+                      <Field 
+                        label={giftType === 'transfer' ? "Amount (UAH)" : giftType === 'market' ? "Item Price (UAH)" : "Game Price (UAH)"} 
+                        value={giftUah} 
+                        onChange={setGiftUah} 
+                      />
                       <div className="modal-actions">
-                        <button type="button" className="btn-secondary" onClick={() => setShowGiftModal(false)}>Cancel</button>
-                        <button type="submit" className="btn-primary">Save Gift</button>
+                        <button type="button" className="btn-secondary" onClick={() => { setShowGiftModal(false); setEditingTx(null); }}>Cancel</button>
+                        <button type="submit" className="btn-primary">{editingTx ? 'Update Outgoing' : 'Save Outgoing'}</button>
                       </div>
                     </form>
                   </div>

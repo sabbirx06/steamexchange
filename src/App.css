@@ -138,7 +138,7 @@ body {
 .layout {
   max-width: 940px;
   margin: 0 auto;
-  padding: 32px 0 64px;
+  padding: 32px 16px 64px;
   display: flex;
   gap: 24px;
 }
@@ -707,7 +707,7 @@ input[type='number']::-webkit-outer-spin-button {
 /* MOBILE RESPONSIVENESS */
 @media (max-width: 768px) {
   .family-columns {
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 24px;
   }
   
@@ -717,24 +717,36 @@ input[type='number']::-webkit-outer-spin-button {
   }
 
   .family-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "addmember addmember"
+      "actions balance";
+    gap: 16px 12px;
+    align-items: center;
   }
   
-  .family-header-left, .family-header-right {
+  .family-header-left {
+    display: contents;
+  }
+
+  .family-header-right {
+    grid-area: balance;
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
-    gap: 12px;
+    align-items: flex-end;
+    gap: 4px;
   }
 
   .market-header-actions {
-    width: 100%;
+    grid-area: actions;
+    width: auto;
     flex-wrap: wrap;
+    margin-bottom: 0 !important;
   }
   
   .add-member-form {
+    grid-area: addmember;
     width: 100%;
   }
   
@@ -743,22 +755,25 @@ input[type='number']::-webkit-outer-spin-button {
   }
   
   .market-tab-bar {
-    flex-direction: column;
-    height: auto;
-    align-items: flex-start;
-    padding: 12px 16px;
-    gap: 12px;
+    flex-direction: row;
+    height: 44px;
+    align-items: center;
+    padding: 0;
+    gap: 0;
   }
   
   .market-tab {
-    padding: 8px 12px;
+    padding: 0 12px;
+    font-size: 13px;
   }
   
   .market-tab-bar .tx-filters {
-    padding-right: 0;
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
+    padding-right: 8px;
+    width: auto;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
   }
 
   .modal {
