@@ -377,7 +377,7 @@ export default function App() {
         const d = new Date(startDate)
         d.setDate(startDate.getDate() + i)
         const key = `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })}`
-        dataMap[key] = { name: key, tk: 0, uah: 0, raw: d.getTime() }
+        dataMap[key] = { name: key, tk: 0, uah: 0, spentUah: 0, raw: d.getTime() }
       }
     } else if (chartRange === 'months') {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -385,18 +385,18 @@ export default function App() {
       for (let i = 1; i <= lastDay; i++) {
         const d = new Date(now.getFullYear(), now.getMonth(), i)
         const key = `${i} ${d.toLocaleString('default', { month: 'short' })}`
-        dataMap[key] = { name: key, tk: 0, uah: 0, raw: d.getTime() }
+        dataMap[key] = { name: key, tk: 0, uah: 0, spentUah: 0, raw: d.getTime() }
       }
     } else if (chartRange === 'years') {
       startDate = new Date(now.getFullYear(), 0, 1)
       const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
       for (let i = 0; i < 12; i++) {
         const key = monthNames[i]
-        dataMap[key] = { name: key, tk: 0, uah: 0, raw: i }
+        dataMap[key] = { name: key, tk: 0, uah: 0, spentUah: 0, raw: i }
       }
     }
 
-    transactions.filter(t => t.type === 'trade').forEach(t => {
+    transactions.forEach(t => {
       if (!t.created_at) return
       const tDate = new Date(t.created_at)
       
@@ -413,8 +413,12 @@ export default function App() {
       }
       
       if (dataMap[key]) {
-        dataMap[key].tk += Number(t.tk || 0)
-        dataMap[key].uah += Number(t.uah || 0)
+        if (t.type === 'trade') {
+          dataMap[key].tk += Number(t.tk || 0)
+          dataMap[key].uah += Number(t.uah || 0)
+        } else if (t.type === 'gift' || t.type === 'market' || t.type === 'transfer') {
+          dataMap[key].spentUah += Number(t.uah || 0)
+        }
       }
     })
 
@@ -757,6 +761,7 @@ export default function App() {
                     <Tooltip contentStyle={{ backgroundColor: '#171a21', border: '1px solid #323f4c', borderRadius: '4px' }} itemStyle={{ color: '#c7d5e0' }} />
                     <Line type="monotone" dataKey="tk" name="Amount Spent (BDT)" stroke="#a4d007" strokeWidth={2} dot={{ r: 4, fill: '#a4d007', strokeWidth: 0 }} activeDot={{ r: 6 }} />
                     <Line type="monotone" dataKey="uah" name="UAH Got (₴)" stroke="#66c0f4" strokeWidth={2} dot={{ r: 4, fill: '#66c0f4', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="spentUah" name="UAH Spent (₴)" stroke="#ff5e5e" strokeWidth={2} dot={{ r: 4, fill: '#ff5e5e', strokeWidth: 0 }} activeDot={{ r: 6 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
