@@ -331,7 +331,7 @@ export default function App() {
           {tab === 'family' && (
             <div className="family-view">
               <div className="family-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div className="family-header-left">
                   <form className="add-member-form" onSubmit={handleAddMember}>
                     <input 
                       type="text" 
@@ -346,7 +346,7 @@ export default function App() {
                     <button className="btn-market-grey" onClick={() => setShowGiftModal(true)}>Log a gift</button>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div className="family-header-right">
                   <span style={{ fontSize: '14px', color: '#66c0f4' }}>Wallet Balance</span>
                   {editingBalance ? (
                     <input 
