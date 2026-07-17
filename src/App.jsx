@@ -38,6 +38,7 @@ export default function App() {
   const [showTk, setShowTk] = useState(true)
   const [showUah, setShowUah] = useState(true)
   const [showSpentUah, setShowSpentUah] = useState(true)
+  const [statMember, setStatMember] = useState('All')
 
   // Deal Calculator
   const [usd, setUsd] = useState('')
@@ -400,6 +401,7 @@ export default function App() {
     }
 
     transactions.forEach(t => {
+      if (statMember !== 'All' && t.person !== statMember) return
       if (!t.created_at) return
       const tDate = new Date(t.created_at)
       
@@ -427,6 +429,35 @@ export default function App() {
 
     return Object.values(dataMap).sort((a, b) => a.raw - b.raw)
   }
+
+  const getStats = () => {
+    let spentGames = 0
+    let spentTk = 0
+    let boughtUah = 0
+    let highestTradeTk = 0
+    let bestRate = Infinity
+
+    transactions.forEach(t => {
+      if (statMember !== 'All' && t.person !== statMember) return
+
+      if (t.type === 'gift' || t.type === 'market') {
+        spentGames += Number(t.uah || 0)
+      } else if (t.type === 'trade') {
+        const uah = Number(t.uah || 0)
+        const tk = Number(t.tk || 0)
+        spentTk += tk
+        boughtUah += uah
+        if (tk > highestTradeTk) highestTradeTk = tk
+        if (uah > 0 && tk > 0) {
+          const rate = tk / uah
+          if (rate < bestRate) bestRate = rate
+        }
+      }
+    })
+
+    return { spentGames, spentTk, boughtUah, highestTradeTk, bestRate: bestRate === Infinity ? 0 : bestRate }
+  }
+  const stats = getStats()
 
   return (
     <>
@@ -770,7 +801,7 @@ export default function App() {
                 </ResponsiveContainer>
               </div>
 
-              <div style={{ display: 'flex', gap: '24px', marginTop: '16px', padding: '0 4px', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: '24px', marginTop: '16px', padding: '0 4px', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <input type="checkbox" checked={showTk} onChange={e => setShowTk(e.target.checked)} />
                   <span style={{ color: '#a4d007', fontSize: '13px', whiteSpace: 'nowrap' }}>Amount Spent (BDT)</span>
@@ -783,7 +814,30 @@ export default function App() {
                   <input type="checkbox" checked={showSpentUah} onChange={e => setShowSpentUah(e.target.checked)} />
                   <span style={{ color: '#ff5e5e', fontSize: '13px', whiteSpace: 'nowrap' }}>UAH Spent (₴)</span>
                 </label>
+
+                <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', margin: '0 8px' }}></div>
+                
+                <select 
+                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px 12px', borderRadius: '4px', textTransform: 'uppercase', fontSize: '12px' }}
+                  value={statMember}
+                  onChange={(e) => setStatMember(e.target.value)}
+                >
+                  <option value="All">All Members</option>
+                  {members.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
               </div>
+
+              <div style={{ marginTop: '32px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '24px' }}>
+                <h2 style={{ border: 'none', margin: '0 0 24px 0', padding: 0 }}>Statistics</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                  <Result label="All-Time UAH Spent (Games/Market)" value={`₴ ${stats.spentGames.toFixed(2)}`} />
+                  <Result label="All-Time BDT Spent on UAH" value={`৳ ${stats.spentTk.toFixed(2)}`} />
+                  <Result label="All-Time UAH Bought" value={`₴ ${stats.boughtUah.toFixed(2)}`} />
+                  <Result label="Highest Purchase (BDT in Single Trade)" value={`৳ ${stats.highestTradeTk.toFixed(2)}`} />
+                  <Result label="Best Rate (Lowest BDT per UAH)" value={stats.bestRate > 0 ? stats.bestRate.toFixed(4) : '-'} highlight />
+                </div>
+              </div>
+
             </div>
           )}
 
