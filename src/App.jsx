@@ -468,7 +468,9 @@ export default function App() {
                               </div>
                             )}
                             {(tx.type === 'gift' || tx.type === 'market') && tx.details && (
-                              <div style={{ color: '#8f98a0', fontSize: '13px' }}>{tx.details}</div>
+                              <div className="discount-tag" style={{ display: 'inline-block', fontWeight: 'normal', fontSize: '13px', borderRadius: '2px' }}>
+                                {tx.details}
+                              </div>
                             )}
                           </td>
                           <td>
