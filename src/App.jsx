@@ -756,21 +756,6 @@ export default function App() {
                 </div>
               </div>
               
-              <div style={{ display: 'flex', gap: '24px', marginBottom: '16px', padding: '0 4px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={showTk} onChange={e => setShowTk(e.target.checked)} />
-                  <span style={{ color: '#a4d007', fontSize: '13px' }}>Amount Spent (BDT)</span>
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={showUah} onChange={e => setShowUah(e.target.checked)} />
-                  <span style={{ color: '#66c0f4', fontSize: '13px' }}>UAH Got (₴)</span>
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={showSpentUah} onChange={e => setShowSpentUah(e.target.checked)} />
-                  <span style={{ color: '#ff5e5e', fontSize: '13px' }}>UAH Spent (₴)</span>
-                </label>
-              </div>
-
               <div style={{ height: '400px', width: '100%', background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '4px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={getChartData()} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -783,6 +768,21 @@ export default function App() {
                     {showSpentUah && <Line type="monotone" dataKey="spentUah" name="UAH Spent (₴)" stroke="#ff5e5e" strokeWidth={2} dot={{ r: 4, fill: '#ff5e5e', strokeWidth: 0 }} activeDot={{ r: 6 }} />}
                   </LineChart>
                 </ResponsiveContainer>
+              </div>
+
+              <div style={{ display: 'flex', gap: '24px', marginTop: '16px', padding: '0 4px', justifyContent: 'center' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={showTk} onChange={e => setShowTk(e.target.checked)} />
+                  <span style={{ color: '#a4d007', fontSize: '13px', whiteSpace: 'nowrap' }}>Amount Spent (BDT)</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={showUah} onChange={e => setShowUah(e.target.checked)} />
+                  <span style={{ color: '#66c0f4', fontSize: '13px', whiteSpace: 'nowrap' }}>UAH Got (₴)</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={showSpentUah} onChange={e => setShowSpentUah(e.target.checked)} />
+                  <span style={{ color: '#ff5e5e', fontSize: '13px', whiteSpace: 'nowrap' }}>UAH Spent (₴)</span>
+                </label>
               </div>
             </div>
           )}
