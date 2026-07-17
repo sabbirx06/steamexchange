@@ -801,7 +801,7 @@ export default function App() {
                 </ResponsiveContainer>
               </div>
 
-              <div style={{ display: 'flex', gap: '24px', marginTop: '16px', padding: '0 4px', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '16px', marginTop: '16px', padding: '0 4px', justifyContent: 'center', alignItems: 'center' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <input type="checkbox" checked={showTk} onChange={e => setShowTk(e.target.checked)} />
                   <span style={{ color: '#a4d007', fontSize: '13px', whiteSpace: 'nowrap' }}>Amount Spent (BDT)</span>
@@ -815,10 +815,10 @@ export default function App() {
                   <span style={{ color: '#ff5e5e', fontSize: '13px', whiteSpace: 'nowrap' }}>UAH Spent (₴)</span>
                 </label>
 
-                <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', margin: '0 8px' }}></div>
+                <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }}></div>
                 
                 <select 
-                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px 12px', borderRadius: '4px', textTransform: 'uppercase', fontSize: '12px' }}
+                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', fontSize: '12px', maxWidth: '120px' }}
                   value={statMember}
                   onChange={(e) => setStatMember(e.target.value)}
                 >
@@ -829,12 +829,33 @@ export default function App() {
 
               <div style={{ marginTop: '32px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '24px' }}>
                 <h2 style={{ border: 'none', margin: '0 0 24px 0', padding: 0 }}>Statistics</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                  <Result label="All-Time UAH Spent (Games/Market)" value={`₴ ${stats.spentGames.toFixed(2)}`} />
-                  <Result label="All-Time BDT Spent on UAH" value={`৳ ${stats.spentTk.toFixed(2)}`} />
-                  <Result label="All-Time UAH Bought" value={`₴ ${stats.boughtUah.toFixed(2)}`} />
-                  <Result label="Highest Purchase (BDT in Single Trade)" value={`৳ ${stats.highestTradeTk.toFixed(2)}`} />
-                  <Result label="Best Rate (Lowest BDT per UAH)" value={stats.bestRate > 0 ? stats.bestRate.toFixed(4) : '-'} highlight />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', background: '#1e2833', padding: '12px 16px', borderRadius: '2px' }}>
+                    <span style={{ color: '#66c0f4', fontSize: '14px' }}>All-Time UAH Spent (Games/Market)</span>
+                    <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>₴ {stats.spentGames.toFixed(2)}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', background: '#1e2833', padding: '12px 16px', borderRadius: '2px' }}>
+                    <span style={{ color: '#66c0f4', fontSize: '14px' }}>All-Time BDT Spent on UAH</span>
+                    <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>৳ {stats.spentTk.toFixed(2)}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', background: '#1e2833', padding: '12px 16px', borderRadius: '2px' }}>
+                    <span style={{ color: '#66c0f4', fontSize: '14px' }}>All-Time UAH Bought</span>
+                    <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>₴ {stats.boughtUah.toFixed(2)}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', background: '#1e2833', padding: '12px 16px', borderRadius: '2px' }}>
+                    <span style={{ color: '#66c0f4', fontSize: '14px' }}>Highest Purchase (BDT in Single Trade)</span>
+                    <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>৳ {stats.highestTradeTk.toFixed(2)}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', background: '#1e2833', padding: '12px 16px', borderRadius: '2px' }}>
+                    <span style={{ color: '#66c0f4', fontSize: '14px' }}>Best Rate (Lowest BDT per UAH)</span>
+                    <span style={{ color: '#a4d007', fontSize: '14px', fontWeight: 'bold' }}>{stats.bestRate > 0 ? stats.bestRate.toFixed(4) : '-'}</span>
+                  </div>
+
                 </div>
               </div>
 
