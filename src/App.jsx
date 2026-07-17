@@ -366,33 +366,56 @@ export default function App() {
 
   const getChartData = () => {
     const dataMap = {}
-    
-    const getKey = (dateStr) => {
-      const d = new Date(dateStr)
-      if (chartRange === 'years') return d.getFullYear().toString()
-      if (chartRange === 'months') {
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-        return `${monthNames[d.getMonth()]} ${d.getFullYear()}`
+    const now = new Date()
+    let startDate;
+
+    if (chartRange === 'weeks') {
+      startDate = new Date(now)
+      startDate.setDate(now.getDate() - 6)
+      startDate.setHours(0,0,0,0)
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(startDate)
+        d.setDate(startDate.getDate() + i)
+        const key = `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })}`
+        dataMap[key] = { name: key, tk: 0, uah: 0, raw: d.getTime() }
       }
-      if (chartRange === 'weeks') {
-        const firstDayOfYear = new Date(d.getFullYear(), 0, 1)
-        const pastDaysOfYear = (d - firstDayOfYear) / 86400000
-        const weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
-        return `${d.getFullYear()} W${weekNum}`
+    } else if (chartRange === 'months') {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+      for (let i = 1; i <= lastDay; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth(), i)
+        const key = `${i} ${d.toLocaleString('default', { month: 'short' })}`
+        dataMap[key] = { name: key, tk: 0, uah: 0, raw: d.getTime() }
       }
-      return dateStr.split('T')[0]
+    } else if (chartRange === 'years') {
+      startDate = new Date(now.getFullYear(), 0, 1)
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+      for (let i = 0; i < 12; i++) {
+        const key = monthNames[i]
+        dataMap[key] = { name: key, tk: 0, uah: 0, raw: i }
+      }
     }
 
     transactions.filter(t => t.type === 'trade').forEach(t => {
       if (!t.created_at) return
-      const key = getKey(t.created_at)
-      if (!dataMap[key]) {
-        dataMap[key] = { name: key, raw: new Date(t.created_at).getTime(), tk: 0, uah: 0 }
+      const tDate = new Date(t.created_at)
+      
+      if (chartRange === 'years' && tDate.getFullYear() !== now.getFullYear()) return
+      if (chartRange === 'months' && (tDate.getFullYear() !== now.getFullYear() || tDate.getMonth() !== now.getMonth())) return
+      if (chartRange === 'weeks' && tDate < startDate) return
+
+      let key;
+      if (chartRange === 'years') {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        key = monthNames[tDate.getMonth()]
       } else {
-        dataMap[key].raw = Math.min(dataMap[key].raw, new Date(t.created_at).getTime())
+        key = `${tDate.getDate()} ${tDate.toLocaleString('default', { month: 'short' })}`
       }
-      dataMap[key].tk += Number(t.tk || 0)
-      dataMap[key].uah += Number(t.uah || 0)
+      
+      if (dataMap[key]) {
+        dataMap[key].tk += Number(t.tk || 0)
+        dataMap[key].uah += Number(t.uah || 0)
+      }
     })
 
     return Object.values(dataMap).sort((a, b) => a.raw - b.raw)
